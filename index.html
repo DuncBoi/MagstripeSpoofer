@@ -1,0 +1,17 @@
+
+<!DOCTYPE html>
+<html>
+<head><title>MagSpoof Control</title></head>
+<body>
+  <h1>MagSpoof Control Panel</h1>
+  <form action="/run" method="get">
+    <label>Number of Scans: <input type="text" name="num_times" value="5"></label><br>
+    <label>Delay (ms): <input type="text" name="delay" value="2000"></label><br>
+    <label>Track String: <input type="text" name="track" value=";4242004800500=0123456789?"></label><br>
+    <input type="submit" value="Send Track">
+  </form>
+  <form action="/stop" method="get">
+    <button type="submit">Stop</button>
+  </form>
+</body>
+</html>
