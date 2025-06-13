@@ -13,12 +13,14 @@ TRACK_DEFAULT = ";4242004800500=0123456789?"
 
 # ---- Get IP Address ----
 def get_ip():
-    while True:
+    for iface in ni.interfaces():
         try:
-            ip = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr']
-            return ip
+            ip = ni.ifaddresses(iface)[ni.AF_INET][0]['addr']
+            if ip != "127.0.0.1":
+                return ip
         except (KeyError, IndexError):
-            time.sleep(1)
+            continue
+    raise RuntimeError("No valid external network interface found")
 
 ip_address = get_ip()
 

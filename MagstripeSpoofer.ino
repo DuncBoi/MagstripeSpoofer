@@ -39,4 +39,3 @@ void loop() {
   // Loop forever doing nothing
   while (true);
 }
-}
