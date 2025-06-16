@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MagSpoof Status</title>
+    <style>
+    body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: start;
+        min-height: 100vh;
+        background: #f0f0f0;
+    }
+    .container {
+        background: white;
+        padding: 20px 30px;
+        margin-top: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        width: 90vw;
+        max-width: 500px;
+    }
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+    p {
+        margin-top: 8px;
+        font-size: 1rem;
+    }
+    #infoList {
+        margin-top: 10px;
+        padding-left: 20px;
+    }
+    #infoList li {
+        margin-bottom: 6px;
+    }
+    #timerDisplay {
+        margin-top: 15px;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    button {
+        margin-top: 20px;
+        padding: 10px 18px;
+        font-size: 1rem;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #005bb5;
+    }
+    #message {
+        margin-top: 10px;
+        font-size: 1rem;
+        color: #333;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MagSpoof Status</h1>
+        <ul id="infoList">
+            <!-- Populated by script -->
+        </ul>
+        <div id="timerDisplay"></div>
+        <form action="/stop" method="get">
+          <button type="submit">Stop</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+    (function(){
+        // Parse query parameters from URL
+        function getParams() {
+            const params = {};
+            const search = window.location.search.substring(1);
+            if (!search) return params;
+            search.split("&").forEach(pair => {
+                const [k, v] = pair.split("=");
+                if (k) {
+                    params[decodeURIComponent(k)] = v === undefined ? "" : decodeURIComponent(v);
+                }
+            });
+            return params;
+        }
+
+        function formatTime(ms) {
+            const totalSec = Math.floor(ms/1000);
+            const m = Math.floor(totalSec/60);
+            const s = totalSec % 60;
+            return `${m}:${s.toString().padStart(2,'0')}`;
+        }
+
+        const params = getParams();
+        const infinite = params.infinite === "1";
+        const num_times = params.num_times ? parseInt(params.num_times, 10) : null;
+        const delay = params.delay ? parseInt(params.delay, 10) : null;
+        const track = params.track || "";
+
+        const infoList = document.getElementById("infoList");
+        const timerDisplay = document.getElementById("timerDisplay");
+        const messageDiv = document.getElementById("message");
+
+        // Populate Mode/Delay/Track info
+        infoList.innerHTML = "";
+        const liMode = document.createElement("li");
+        liMode.textContent = "Mode: " + (infinite ? "Infinite" : (`Fixed (${num_times} scans)`));
+        infoList.appendChild(liMode);
+
+        if (delay !== null && !isNaN(delay)) {
+            const liDelay = document.createElement("li");
+            liDelay.textContent = "Delay: " + delay + " ms";
+            infoList.appendChild(liDelay);
+        }
+        if (track) {
+            const liTrack = document.createElement("li");
+            liTrack.textContent = "Track: " + track;
+            infoList.appendChild(liTrack);
+        }
+
+        // Timer logic
+        let startTime = Date.now();
+        let totalMs = null;
+        let timerInterval = null;
+
+        function updateTimer() {
+            const elapsed = Date.now() - startTime;
+            if (infinite) {
+                timerDisplay.textContent = "Elapsed: " + formatTime(elapsed) + " ∞";
+            } else {
+                if (num_times !== null && delay !== null && !isNaN(num_times) && !isNaN(delay)) {
+                    totalMs = num_times * delay;
+                    const remaining = totalMs - elapsed;
+                    if (remaining > 0) {
+                        timerDisplay.textContent = "Remaining: " + formatTime(remaining);
+                    } else {
+                        timerDisplay.textContent = "Completed";
+                        clearInterval(timerInterval);
+                        // After a pause, redirect back to main page
+                        setTimeout(()=>{
+                            window.location.href = "/";
+                        }, 2000);
+                    }
+                } else {
+                    timerDisplay.textContent = "";
+                }
+            }
+        }
+
+        timerInterval = setInterval(updateTimer, 500);
+        updateTimer();
+    })();
+    </script>
+</body>
+</html>

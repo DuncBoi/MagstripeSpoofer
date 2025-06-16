@@ -1,17 +1,116 @@
-
 <!DOCTYPE html>
-<html>
-<head><title>MagSpoof Control</title></head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MagSpoof Control</title>
+    <style>
+    body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: start;
+        min-height: 100vh;
+        background: #f0f0f0;
+    }
+    .container {
+        background: white;
+        padding: 20px 30px;
+        margin-top: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        width: 90vw;
+        max-width: 500px;
+    }
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+    label {
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
+    }
+    input[type="text"],
+    input[type="number"] {
+        width: 100%;
+        font-size: 1rem;
+        padding: 6px 8px;
+        margin-top: 5px;
+        box-sizing: border-box;
+    }
+    .radio-group {
+        margin-top: 5px;
+    }
+    .radio-group label {
+        font-weight: normal;
+        margin-right: 15px;
+    }
+    button {
+        margin-top: 20px;
+        padding: 10px 18px;
+        font-size: 1rem;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #005bb5;
+    }
+    </style>
+</head>
 <body>
-  <h1>MagSpoof Control Panel</h1>
-  <form action="/run" method="get">
-    <label>Number of Scans: <input type="text" name="num_times" value="5"></label><br>
-    <label>Delay (ms): <input type="text" name="delay" value="2000"></label><br>
-    <label>Track String: <input type="text" name="track" value=";4242004800500=0123456789?"></label><br>
-    <input type="submit" value="Send Track">
-  </form>
-  <form action="/stop" method="get">
-    <button type="submit">Stop</button>
-  </form>
+    <div class="container">
+        <h1>MagSpoof Control</h1>
+        <form id="controlForm" action="/run" method="get">
+            <label>Run Mode:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="mode" value="fixed" checked> Fixed</label>
+                <label><input type="radio" name="mode" value="infinite"> Infinite</label>
+            </div>
+            <div id="fixedSection">
+                <label for="num_times">Number of scans:</label>
+                <input type="number" id="num_times" name="num_times" value="5" min="1">
+            </div>
+            <label for="delay">Delay between scans (ms, ≥ 50):</label>
+            <input type="number" id="delay" name="delay" value="2000" min="50">
+            <label for="track">Track string:</label>
+            <input type="text" id="track" name="track" value=";4242004800500=0123456789?" placeholder=";...?" >
+            <!-- Hidden infinite flag; JS will set to "1" or "0" -->
+            <input type="hidden" id="infinite" name="infinite" value="0">
+            <button type="submit" id="startButton">Start</button>
+        </form>
+    </div>
+
+    <script>
+    (function(){
+        // Toggle the hidden infinite input and show/hide fixedSection
+        const modeRadios = document.querySelectorAll("input[name='mode']");
+        const fixedSection = document.getElementById("fixedSection");
+        const numTimesInput = document.getElementById("num_times");
+        const infiniteHidden = document.getElementById("infinite");
+
+        function updateMode(){
+            const sel = document.querySelector("input[name='mode']:checked").value;
+            if(sel === "fixed"){
+                fixedSection.style.display = "";
+                infiniteHidden.value = "0";
+                numTimesInput.disabled = false;
+            } else {
+                fixedSection.style.display = "none";
+                infiniteHidden.value = "1";
+                numTimesInput.disabled = true;
+            }
+        }
+
+        modeRadios.forEach(radio => {
+            radio.addEventListener("change", updateMode);
+        });
+        updateMode();
+    })();
+    </script>
 </body>
 </html>

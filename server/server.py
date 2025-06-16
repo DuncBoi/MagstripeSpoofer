@@ -1,17 +1,19 @@
 import cherrypy
 import netifaces as ni
-import time 
+import time
 import os
-import subprocess
 import serial
+import urllib.parse
+
+# Path setup
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # ~/MagstripeSpoofer/server
+INDEX_HTML = os.path.join(BASE_DIR, "index.html")
+STATUS_HTML = os.path.join(BASE_DIR, "status.html")
 
 SERIAL_PORT = "/dev/ttyACM0"
 BAUD_RATE = 9600
-PROJECT_DIR = os.path.expanduser("~/MagstripeSpoofer")
-HTML_PATH = os.path.join(PROJECT_DIR, "server/index.html")
 TRACK_DEFAULT = ";4242004800500=0123456789?"
 
-# ---- Get IP Address ----
 def get_ip():
     for iface in ni.interfaces():
         try:
@@ -20,50 +22,95 @@ def get_ip():
                 return ip
         except (KeyError, IndexError):
             continue
-    raise RuntimeError("No valid external network interface found")
+    return "0.0.0.0"
 
 ip_address = get_ip()
 
-# ---- Main Web App ----
 class MagSpoofWeb:
     @cherrypy.expose
     def index(self):
-        return open(HTML_PATH)
+        # Serve index.html
+        return open(INDEX_HTML)
 
     @cherrypy.expose
-    def run(self, num_times=None, delay=None, track=None):
-        if not (num_times and delay):
-            return "Missing num_times or delay"
+    def run(self, num_times=None, delay=None, track=None, infinite=None, mode=None):
+        # Validate delay
+        if not delay:
+            return "Missing delay"
+        try:
+            delay_int = int(delay)
+            if delay_int < 50:
+                return "Delay must be ≥50 ms"
+        except:
+            return "Invalid delay"
+        track_val = track or TRACK_DEFAULT
 
-        track = track or TRACK_DEFAULT
+        # Determine count_str
+        if infinite == "1":
+            count_str = "INF"
+        else:
+            if not num_times:
+                return "Missing num_times"
+            try:
+                n = int(num_times)
+                if n < 1:
+                    return "num_times must be ≥1"
+                count_str = str(n)
+            except:
+                return "Invalid num_times"
 
+        # Send to Arduino via serial
         try:
             with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
-                time.sleep(2)  # Wait for Arduino reset
-                line = ser.readline().decode()
+                # Opening the port resets Arduino via DTR
+                time.sleep(2)
+                line = ser.readline().decode(errors="ignore")
                 if "READY" not in line:
                     return f"Arduino not ready. Got: {line.strip()}"
-
-                ser.write(f"{num_times}\n".encode())
-                ser.write(f"{delay}\n".encode())
-                ser.write(f"{track}\n".encode())
-
-                return f"Sent {num_times} scans with {delay}ms delay and track: {track}"
-
+                # Write lines
+                ser.write((count_str + "\n").encode())
+                ser.write((delay + "\n").encode())
+                ser.write((track_val + "\n").encode())
         except Exception as e:
             return f"Serial communication failed: {e}"
 
+        # Build query string for status.html
+        qs = []
+        if infinite == "1":
+            qs.append("infinite=1")
+        else:
+            qs.append(f"num_times={int(num_times)}")
+            qs.append("infinite=0")
+        qs.append(f"delay={int(delay)}")
+        if track_val:
+            qs.append("track=" + urllib.parse.quote(track_val, safe=''))
+        query = "&".join(qs)
+
+        raise cherrypy.HTTPRedirect(f"/status?{query}")
+
     @cherrypy.expose
     def stop(self):
+        # Reset Arduino into idle
         try:
             with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
                 time.sleep(2)
                 ser.readline()
-                ser.write("0\n5000\n\n".encode())  # Stop the loop
-            return "Spoofer stopped."
+                ser.write(b"0\n5000\n\n")
         except Exception as e:
             return f"Stop failed: {e}"
+        # Redirect back to main form
+        raise cherrypy.HTTPRedirect("/")
 
 if __name__ == '__main__':
-    cherrypy.config.update({'server.socket_host': ip_address, 'server.socket_port': 8080})
-    cherrypy.quickstart(MagSpoofWeb())
+    # CherryPy config to serve status.html at /status
+    conf = {
+        '/status': {
+            'tools.staticfile.on': True,
+            'tools.staticfile.filename': STATUS_HTML
+        }
+    }
+    cherrypy.config.update({
+        'server.socket_host': ip_address,
+        'server.socket_port': 8080
+    })
+    cherrypy.quickstart(MagSpoofWeb(), '/', conf)
