@@ -84,9 +84,14 @@
             const search = window.location.search.substring(1);
             if (!search) return params;
             search.split("&").forEach(pair => {
-                const [k, v] = pair.split("=");
-                if (k) {
-                    params[decodeURIComponent(k)] = v === undefined ? "" : decodeURIComponent(v);
+                const idx = pair.indexOf("=");
+                if (idx < 0) {
+                    // no '=', treat entire part as key with empty value
+                    params[decodeURIComponent(pair)] = "";
+                } else {
+                    const key = decodeURIComponent(pair.substring(0, idx));
+                    const val = decodeURIComponent(pair.substring(idx + 1));
+                    params[key] = val;
                 }
             });
             return params;
@@ -144,10 +149,13 @@
                     } else {
                         timerDisplay.textContent = "Completed";
                         clearInterval(timerInterval);
-                        // After a pause, redirect back to main page
-                        setTimeout(()=>{
-                            window.location.href = "/";
-                        }, 2000);
+                        fetch("/stop")
+                            .then(() => {
+                                setTimeout(() => window.location.href = "/", 1000);
+                            })
+                            .catch(() => {
+                                setTimeout(() => window.location.href = "/", 1000);
+                            });
                     }
                 } else {
                     timerDisplay.textContent = "";
