@@ -1,3 +1,22 @@
+## Magstripe Spoofer
+
+A web app that interacts with an Arduino-driven H-bridge to emulate magnetic stripe card swipes of any kind. It is ideal for testing, prototyping, and automating card reader systems without needing physical cards.
+
+## Table of Contents
+
+1. [Magstripe Spoofer](#magstripe-spoofer)  
+2. [Required Hardware](#required-hardware)  
+3. [Hardware Setup](#hardware-setup)  
+   1. [Pin Configuration Table](#pin-configuration-table)  
+   2. [Winding the Coil](#winding-the-coil)  
+4. [After Completion](#after-completion)  
+5. [Software Setup](#software-setup)  
+   1. [Prerequisites](#prerequisites)  
+   2. [Arduino and Web Server](#arduino-and-web-server)  
+   3. [Simulating Swipes](#simulating-swipes)  
+   4. [Placing the Coil onto the Magstripe Reader](#placing-the-coil-onto-the-magstripe-reader)  
+   5. [Running the Program](#running-the-program)  
+
 ## Required Hardware
 
 - **Arduino Nano** – Microcontroller
@@ -28,7 +47,6 @@ Wire each Nano pin to the corresponding pin (as shown on table):
 | 8         | D13             | VCC2  | Toggles coil power (allows web server to start/stop)   |
 | 5         | GND             | GND   | Ground  |
 
-> **Note:** *Hardware setup derived from [MagSpoof by samyk](https://github.com/samyk/magspoof/)*
 
 ### Winding the Coil
 - We used 24 AWG Magnet Wire, wrapped around a 1 square inch area 50 times
@@ -98,4 +116,30 @@ Wire each Nano pin to the corresponding pin (as shown on table):
    ```bash
    ENGINE Serving on http://10.15.57.104:8080
     ```
-   Now you can access the server from the provided address  
+   Now you can access the server from the provided address
+
+---
+
+## Simulating Swipes
+This is what you should see when you load the web page:  
+![UI](static/ui.png)  
+
+### Features
+- You can choose to transmit a fixed or infinite amount (program runs until stop button is hit) of simulated swipes
+- You can specify any delay (in ms) between simulated swipes
+- You can choose between any of the three classic Magstipe track types to simulate
+- You can use the default track data or input your own
+
+### Place the Coil onto the Magstripe Reader
+> **Note:** *Finding the correct angle and placement of the coil so that it reliably triggers the barcode reader can be tedious. I find that it works best when placed above the ends of the reader and away from the center. Once you find a good location, tape the coil to the spot for repeated use*
+
+Example:
+![Orientation](static/orientation.jpg)  
+
+### Running the Program
+- Just click the start button and the UI will display any errors in communicating with the arduino
+- If everything goes well, you will see something like this:
+
+![UI2](static/ui2.png)  
+
+- To stop the program, just hit the stop button and the arduino will reset
