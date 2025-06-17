@@ -16,6 +16,13 @@ A web app that interacts with an Arduino-driven H-bridge to emulate magnetic str
    3. [Simulating Swipes](#simulating-swipes)  
    4. [Place the Coil onto the Magstripe Reader](#place-the-coil-onto-the-magstripe-reader)  
    5. [Running the Program](#running-the-program)  
+6. [Code Overview](#code-overview)  
+   1. [`setup.sh`](#setupsh)  
+   2. [`magstripespoofer.ino`](#magstripespooferino)  
+   3. [MagSpoof Class](#magspoof-class)  
+   4. [`server/server.py`](#serverserverpy)  
+   5. [`server/index.html`](#serverindexhtml)  
+   6. [`server/status.html`](#serverstatushtml)  
 
 ## Required Hardware
 
@@ -143,3 +150,54 @@ Example:
 ![UI2](static/ui2.png)  
 
 - To stop the program, just hit the stop button and the arduino will reset
+
+## Code Overview
+
+Below is a summary of each major code component and its purpose:
+
+### `setup.sh`
+- **Group & Permissions**  
+  Checks/adds your user to `dialout` so you can access `/dev/ttyACM0`.  
+- **arduino-cli Installation**  
+  Installs or updates `arduino-cli`, then updates and installs the AVR core.  
+- **Build & Flash**  
+  Compiles the sketch for `arduino:avr:uno` and uploads it to the Nano on the specified serial port.
+
+### `magstripespoofer.ino`
+- **MagSpoof Setup**  
+  Initializes the MagSpoof library with your pin mappings (A, B, ENABLE) and track format.  
+- **`setup()`**  
+  - Brings up the MagSpoof hardware.  
+  - Opens serial at 9600 baud.  
+  - Reads three lines from the PC:  
+    1. `INF` or swipe count  
+    2. Delay in milliseconds  
+    3. The raw track data string  
+- **`loop()`**  
+  - If infinite mode: loops `playTrack(trackBuffer)` with delay, listens for a `STOP` command.  
+  - If fixed count: calls `playTrack(trackBuffer)` exactly `scanCount` times, or until `STOP`.  
+  - After finishing, halts in a 1 s delay loop to prevent accidental replays.
+
+### MagSpoof Class
+
+- **Initialization & Setup**  
+  Configures drive pins (`pinA`, `pinB`, `pinEnable`), timing (`clockUS`), bits-per-character, and parity in the constructor, then sets them as outputs in `setup()`.  
+- **Bit & Track Playback**  
+  `playBit()` toggles coil polarity and pulses for one or two half-cycles; `playTrack()` sends leading zeros, encodes each character (with optional parity), computes/transmits LRC, then trailing zeros.  
+- **Character Conversion**  
+  `convertChar()` maps ASCII characters into numeric values based on the selected bits-per-character format (BPC4–BPC7).
+
+### server/server.py
+
+- **Web Interface (CherryPy)**  
+  Defines `/` (serves `index.html`), `/run` (validates inputs, writes count/delay/track over serial, redirects to status), and `/stop` (sends a “stop” command to the Arduino).  
+- **Serial Communication**  
+  Opens `/dev/ttyACM0` at 9600 baud, waits for `READY`, then sends three newline-terminated lines (`count`, `delay`, `track`) or a stop sequence.  
+- **Network & Static Files**  
+  Detects host IP via `netifaces`, configures CherryPy socket, and serves `status.html` statically under `/status`.
+
+### server/index.html and server/status.html
+- **Basic UI Components**  
+  all html, css, and js
+
+
