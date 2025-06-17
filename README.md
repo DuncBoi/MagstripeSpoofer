@@ -14,7 +14,7 @@ A web app that interacts with an Arduino-driven H-bridge to emulate magnetic str
    1. [Prerequisites](#prerequisites)  
    2. [Arduino and Web Server](#arduino-and-web-server)  
    3. [Simulating Swipes](#simulating-swipes)  
-   4. [Placing the Coil onto the Magstripe Reader](#placing-the-coil-onto-the-magstripe-reader)  
+   4. [Place the Coil onto the Magstripe Reader](#placing-the-coil-onto-the-magstripe-reader)  
    5. [Running the Program](#running-the-program)  
 
 ## Required Hardware
