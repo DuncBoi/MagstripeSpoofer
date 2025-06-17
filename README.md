@@ -2,6 +2,8 @@
 
 A web app that interacts with an Arduino-driven H-bridge to emulate magnetic stripe card swipes of any kind. It is ideal for testing, prototyping, and automating card reader systems without needing physical cards.
 
+---
+
 ## Table of Contents
 
 1. [Magstripe Spoofer](#magstripe-spoofer)  
@@ -22,7 +24,9 @@ A web app that interacts with an Arduino-driven H-bridge to emulate magnetic str
    3. [MagSpoof Class](#magspoof-class)  
    4. [`server/server.py`](#serverserverpy)  
    5. [`server/index.html`](#serverindexhtml)  
-   6. [`server/status.html`](#serverstatushtml)  
+   6. [`server/status.html`](#serverstatushtml)
+
+---
 
 ## Required Hardware
 
@@ -58,8 +62,6 @@ Wire each Nano pin to the corresponding pin (as shown on table):
 ### Winding the Coil
 - We used 24 AWG Magnet Wire, wrapped around a 1 square inch area 50 times
 - You can experiment with different gauges and coil dimensions
-
----
 
 ### After Completion:
 
@@ -107,14 +109,16 @@ Wire each Nano pin to the corresponding pin (as shown on table):
    ```
    Upgrades `pip` and installs libraries from `requirements.txt`.
 
-5. Run the setup script
+5. Plug the Arduino into your computer
+
+6. Run the setup script
    ```bash
    chmod +x setup.sh
    ./setup.sh
    ```
    Compiles the Arduino sketch via `arduino-cli` and uploads it to the Nano on the configured serial port.
   
-6. Start the web server
+7. Start the web server
    ```bash
    cd server
    python3 server.py
@@ -150,6 +154,8 @@ Example:
 ![UI2](static/ui2.png)  
 
 - To stop the program, just hit the stop button and the arduino will reset
+
+---
 
 ## Code Overview
 
