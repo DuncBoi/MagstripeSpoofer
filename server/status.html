@@ -6,8 +6,7 @@
     <style>
     body {
         font-family: "Segoe UI", Tahoma, sans-serif;
-        margin: 0;
-        padding: 0;
+        margin: 0; padding: 0;
         display: flex;
         justify-content: center;
         align-items: start;
@@ -23,26 +22,10 @@
         width: 90vw;
         max-width: 500px;
     }
-    h1 {
-        font-size: 1.5rem;
-        margin-bottom: 10px;
-    }
-    p {
-        margin-top: 8px;
-        font-size: 1rem;
-    }
-    #infoList {
-        margin-top: 10px;
-        padding-left: 20px;
-    }
-    #infoList li {
-        margin-bottom: 6px;
-    }
-    #timerDisplay {
-        margin-top: 15px;
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
+    h1 { font-size: 1.5rem; margin-bottom: 10px; }
+    #infoList { margin-top: 10px; padding-left: 20px; }
+    #infoList li { margin-bottom: 6px; }
+    #timerDisplay { margin-top: 15px; font-size: 1.2rem; font-weight: bold; }
     button {
         margin-top: 20px;
         padding: 10px 18px;
@@ -53,14 +36,8 @@
         border-radius: 4px;
         cursor: pointer;
     }
-    button:hover {
-        background: #005bb5;
-    }
-    #message {
-        margin-top: 10px;
-        font-size: 1rem;
-        color: #333;
-    }
+    button:hover { background: #005bb5; }
+    #message { margin-top: 10px; font-size: 1rem; color: #333; }
     </style>
 </head>
 <body>
@@ -71,14 +48,14 @@
         </ul>
         <div id="timerDisplay"></div>
         <form action="/stop" method="get">
-          <button type="submit">Stop</button>
+          <button type="submit" id="stopButton">Stop</button>
         </form>
         <div id="message"></div>
     </div>
 
     <script>
     (function(){
-        // Parse query parameters from URL
+        // Parse query parameters, splitting only on first '=' so track data with '=' works
         function getParams() {
             const params = {};
             const search = window.location.search.substring(1);
@@ -86,7 +63,6 @@
             search.split("&").forEach(pair => {
                 const idx = pair.indexOf("=");
                 if (idx < 0) {
-                    // no '=', treat entire part as key with empty value
                     params[decodeURIComponent(pair)] = "";
                 } else {
                     const key = decodeURIComponent(pair.substring(0, idx));
@@ -108,32 +84,40 @@
         const infinite = params.infinite === "1";
         const num_times = params.num_times ? parseInt(params.num_times, 10) : null;
         const delay = params.delay ? parseInt(params.delay, 10) : null;
+        const trackType = params.track_type || "track2";
         const track = params.track || "";
 
         const infoList = document.getElementById("infoList");
         const timerDisplay = document.getElementById("timerDisplay");
-        const messageDiv = document.getElementById("message");
 
-        // Populate Mode/Delay/Track info
+        // Populate Mode, Delay, Track Type, Track data
         infoList.innerHTML = "";
+        // Mode
         const liMode = document.createElement("li");
-        liMode.textContent = "Mode: " + (infinite ? "Infinite" : (`Fixed (${num_times} scans)`));
+        liMode.textContent = "Mode: " + (infinite ? "Infinite" : `Fixed (${num_times} scans)`);
         infoList.appendChild(liMode);
-
+        // Delay
         if (delay !== null && !isNaN(delay)) {
             const liDelay = document.createElement("li");
             liDelay.textContent = "Delay: " + delay + " ms";
             infoList.appendChild(liDelay);
         }
+        // Track Type
+        const liType = document.createElement("li");
+        let typeText = "Track 2";
+        if (trackType === "track1") typeText = "Track 1";
+        else if (trackType === "track3") typeText = "Track 3";
+        liType.textContent = "Track Type: " + typeText;
+        infoList.appendChild(liType);
+        // Track data
         if (track) {
             const liTrack = document.createElement("li");
-            liTrack.textContent = "Track: " + track;
+            liTrack.textContent = "Track data: " + track;
             infoList.appendChild(liTrack);
         }
 
-        // Timer logic
+        // Timer logic with auto-stop when fixed runs complete
         let startTime = Date.now();
-        let totalMs = null;
         let timerInterval = null;
 
         function updateTimer() {
@@ -142,13 +126,14 @@
                 timerDisplay.textContent = "Elapsed: " + formatTime(elapsed) + " ∞";
             } else {
                 if (num_times !== null && delay !== null && !isNaN(num_times) && !isNaN(delay)) {
-                    totalMs = num_times * delay;
+                    const totalMs = num_times * delay;
                     const remaining = totalMs - elapsed;
                     if (remaining > 0) {
                         timerDisplay.textContent = "Remaining: " + formatTime(remaining);
                     } else {
                         timerDisplay.textContent = "Completed";
                         clearInterval(timerInterval);
+                        // Auto-stop Arduino
                         fetch("/stop")
                             .then(() => {
                                 setTimeout(() => window.location.href = "/", 1000);

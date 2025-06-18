@@ -1,116 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>MagSpoof Control</title>
-    <style>
-    body {
-        font-family: "Segoe UI", Tahoma, sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: start;
-        min-height: 100vh;
-        background: #f0f0f0;
-    }
-    .container {
-        background: white;
-        padding: 20px 30px;
-        margin-top: 40px;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        width: 90vw;
-        max-width: 500px;
-    }
-    h1 {
-        font-size: 1.5rem;
-        margin-bottom: 10px;
-    }
-    label {
-        font-weight: bold;
-        display: block;
-        margin-top: 15px;
-    }
-    input[type="text"],
-    input[type="number"] {
-        width: 100%;
-        font-size: 1rem;
-        padding: 6px 8px;
-        margin-top: 5px;
-        box-sizing: border-box;
-    }
-    .radio-group {
-        margin-top: 5px;
-    }
-    .radio-group label {
-        font-weight: normal;
-        margin-right: 15px;
-    }
-    button {
-        margin-top: 20px;
-        padding: 10px 18px;
-        font-size: 1rem;
-        background: #0066cc;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    button:hover {
-        background: #005bb5;
-    }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>MagSpoof Control</h1>
-        <form id="controlForm" action="/run" method="get">
-            <label>Run Mode:</label>
-            <div class="radio-group">
-                <label><input type="radio" name="mode" value="fixed" checked> Fixed</label>
-                <label><input type="radio" name="mode" value="infinite"> Infinite</label>
-            </div>
-            <div id="fixedSection">
-                <label for="num_times">Number of scans:</label>
-                <input type="number" id="num_times" name="num_times" value="5" min="1">
-            </div>
-            <label for="delay">Delay between scans (ms, ≥ 50):</label>
-            <input type="number" id="delay" name="delay" value="2000" min="50">
-            <label for="track">Track string:</label>
-            <input type="text" id="track" name="track" value=";4242004800500=0123456789?" placeholder=";...?" >
-            <!-- Hidden infinite flag; JS will set to "1" or "0" -->
-            <input type="hidden" id="infinite" name="infinite" value="0">
-            <button type="submit" id="startButton">Start</button>
-        </form>
-    </div>
-
-    <script>
-    (function(){
-        // Toggle the hidden infinite input and show/hide fixedSection
-        const modeRadios = document.querySelectorAll("input[name='mode']");
-        const fixedSection = document.getElementById("fixedSection");
-        const numTimesInput = document.getElementById("num_times");
-        const infiniteHidden = document.getElementById("infinite");
-
-        function updateMode(){
-            const sel = document.querySelector("input[name='mode']:checked").value;
-            if(sel === "fixed"){
-                fixedSection.style.display = "";
-                infiniteHidden.value = "0";
-                numTimesInput.disabled = false;
-            } else {
-                fixedSection.style.display = "none";
-                infiniteHidden.value = "1";
-                numTimesInput.disabled = true;
-            }
+    <head>
+        <meta charset="UTF-8">
+        <title>MagSpoof Control</title>
+        <style>
+        body {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            min-height: 100vh;
+            background: #f0f0f0;
         }
+        .container {
+            background: white;
+            padding: 20px 30px;
+            margin-top: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            width: 90vw;
+            max-width: 500px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            font-size: 1rem;
+            padding: 6px 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        .radio-group {
+            margin-top: 5px;
+        }
+        .radio-group label {
+            font-weight: normal;
+            margin-right: 15px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 18px;
+            font-size: 1rem;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #005bb5;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>MagSpoof Control</h1>
+            <form id="controlForm" action="/run" method="get">
+                <label>Run Mode:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="mode" value="fixed" checked> Fixed</label>
+                    <label><input type="radio" name="mode" value="infinite"> Infinite</label>
+                </div>
+                <div id="fixedSection">
+                    <label for="num_times">Number of scans:</label>
+                    <input type="number" id="num_times" name="num_times" value="5" min="1">
+                </div>
+                <label for="delay">Delay between scans (ms, ≥ 50):</label>
+                <input type="number" id="delay" name="delay" value="2000" min="50">
 
-        modeRadios.forEach(radio => {
-            radio.addEventListener("change", updateMode);
-        });
-        updateMode();
-    })();
-    </script>
-</body>
+                <label for="trackType">Track Type:</label>
+                <select id="trackType" name="track_type">
+                    <option value="track1">Track 1 (alphanumeric)</option>
+                    <option value="track2" selected>Track 2 (numeric)</option>
+                    <option value="track3">Track 3 (numeric, less common)</option>
+                </select>
+
+                <label for="track">Track data:</label>
+                <input type="text" id="track" name="track"
+                    value=";4242004800500=0123456789?" 
+                    placeholder="Enter full track string, including sentinels">
+
+                <!-- Hidden infinite flag; JS will set to "1" or "0" -->
+                <input type="hidden" id="infinite" name="infinite" value="0">
+                <button type="submit" id="startButton">Start</button>
+            </form>
+        </div>
+
+        <script>
+        (function(){
+            // Toggle the hidden infinite input and show/hide fixedSection
+            const modeRadios = document.querySelectorAll("input[name='mode']");
+            const fixedSection = document.getElementById("fixedSection");
+            const numTimesInput = document.getElementById("num_times");
+            const infiniteHidden = document.getElementById("infinite");
+            const trackTypeSelect = document.getElementById("trackType");
+            const trackInput = document.getElementById("track");
+
+            function updateMode(){
+                const sel = document.querySelector("input[name='mode']:checked").value;
+                if(sel === "fixed"){
+                    fixedSection.style.display = "";
+                    infiniteHidden.value = "0";
+                    numTimesInput.disabled = false;
+                } else {
+                    fixedSection.style.display = "none";
+                    infiniteHidden.value = "1";
+                    numTimesInput.disabled = true;
+                }
+            }
+
+            modeRadios.forEach(radio => {
+                radio.addEventListener("change", updateMode);
+            });
+            updateMode();
+
+            const defaults = {
+                track1: "%B1234567890123456^LAST/FIRST^24051210000000000000?",
+                track2: ";4242004800500=0123456789?",
+                track3: ";4242004800500=0123456789?"  // adjust as needed
+            };
+
+            function updatePlaceholderAndValue(){
+                const t = trackTypeSelect.value;
+                // Update placeholder
+                if(t === "track1"){
+                    trackInput.placeholder = defaults.track1;
+                } else if(t === "track2"){
+                    trackInput.placeholder = defaults.track2;
+                } else if(t === "track3"){
+                    trackInput.placeholder = defaults.track3;
+                }
+
+                // If the current value is empty OR equals one of the other defaults,
+                // set it to the new default. This prevents overwriting a user-entered custom value.
+                const cur = trackInput.value.trim();
+                const isEmpty = cur === "";
+                const isOldDefault = Object.values(defaults).includes(cur);
+                if(isEmpty || isOldDefault) {
+                    trackInput.value = defaults[t];
+                }
+                // Otherwise, leave the custom value the user typed.
+            }
+
+            trackTypeSelect.addEventListener("change", updatePlaceholderAndValue);
+            // Call once on load to initialize:
+            updatePlaceholderAndValue();
+        })();
+        </script>
+    </body>
 </html>
