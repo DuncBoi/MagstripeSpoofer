@@ -142,7 +142,7 @@ This is what you should see when you load the web page:
 - You can use the default track data or input your own
 
 ### Place the Coil onto the Magstripe Reader
-> **Note:** *Finding the correct angle and placement of the coil so that it reliably triggers the barcode reader can be tedious. I find that it works best when placed above the ends of the reader and away from the center. Once you find a good location, tape the coil to the spot for repeated use*
+> **Note:** *Finding the correct angle and placement of the coil so that it reliably triggers the magstripe reader can be tedious. I find that it works best when placed above the ends of the reader and away from the center. Once you find a good location, tape the coil to the spot for repeated use*
 
 Example:
 ![Orientation](static/orientation.jpg)  
